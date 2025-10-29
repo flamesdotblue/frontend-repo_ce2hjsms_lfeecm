@@ -1,5 +1,5 @@
 import React from 'react';
-import { HeartPulse, MessageCircle, Upload, User, Stethoscope } from 'lucide-react';
+import { HeartPulse, MessageCircle, Upload, User, Stethoscope, LayoutDashboard } from 'lucide-react';
 
 const Header = ({ user, onLogout, onNavigate }) => {
   return (
@@ -24,6 +24,11 @@ const Header = ({ user, onLogout, onNavigate }) => {
           <button onClick={() => onNavigate('care')} className="hover:text-white transition inline-flex items-center gap-2">
             <Stethoscope className="h-4 w-4" /> Care
           </button>
+          {user && (
+            <button onClick={() => onNavigate('dashboard')} className="hover:text-white transition inline-flex items-center gap-2">
+              <LayoutDashboard className="h-4 w-4" /> Dashboard
+            </button>
+          )}
         </nav>
         <div className="flex items-center gap-3">
           {user ? (
