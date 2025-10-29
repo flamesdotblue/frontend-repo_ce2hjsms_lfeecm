@@ -1,131 +1,129 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { LogIn, Shield, User } from 'lucide-react';
 
-const baseURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-
-export default function AuthPortal({ onAuthenticated }) {
+const AuthPortal = ({ baseUrl, onAuth }) => {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
-  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'patient' });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('patient'); // patient | doctor | admin
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setError('');
     try {
-      if (mode === 'register') {
-        const res = await fetch(`${baseURL}/auth/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: form.name,
-            email: form.email,
-            password: form.password,
-            role: form.role,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Registration failed');
-        setMessage('Registration successful. You can now log in.');
-        setMode('login');
-      } else {
-        const res = await fetch(`${baseURL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: form.email, password: form.password }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.detail || 'Login failed');
-        onAuthenticated?.(data.token, data.user || null);
-        setMessage('Logged in successfully.');
-      }
+      const endpoint = mode === 'login' ? '/auth/login' : '/auth/register';
+      const res = await fetch(`${baseUrl}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, role }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Authentication failed');
+
+      // Expected response: { token, user: { email, role, ... } }
+      onAuth(data.token, data.user || { email, role });
+      setEmail('');
+      setPassword('');
     } catch (err) {
-      setMessage(err.message || 'Something went wrong');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <section id="auth" className="relative">
-      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 md:p-8 shadow-xl">
+    <section id="auth" className="w-full">
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 md:p-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl md:text-2xl font-semibold text-white">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-          <button
-            onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-            className="text-sm text-cyan-300 hover:text-white transition"
-          >
-            {mode === 'login' ? 'Need an account?' : 'Have an account? Log in'}
-          </button>
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-cyan-400 to-fuchsia-500 flex items-center justify-center">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-white font-semibold">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h3>
+              <p className="text-white/60 text-sm">Access your personalized health hub</p>
+            </div>
+          </div>
+          <div className="flex gap-2 bg-white/10 rounded-lg p-1">
+            <button
+              onClick={() => setMode('login')}
+              className={`px-3 py-1.5 text-sm rounded-md ${mode === 'login' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white'}`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => setMode('register')}
+              className={`px-3 py-1.5 text-sm rounded-md ${mode === 'register' ? 'bg-white/20 text-white' : 'text-white/70 hover:text-white'}`}
+            >
+              Register
+            </button>
+          </div>
         </div>
-        <form onSubmit={handleSubmit} className="grid gap-4">
-          {mode === 'register' && (
-            <div className="grid gap-2">
-              <label className="text-sm text-cyan-200">Full Name</label>
+
+        <form onSubmit={submit} className="grid gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs text-white/70">Email</label>
               <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                placeholder="Alex Johnson"
+                className="mt-1 w-full rounded-md bg-black/40 border border-white/10 p-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                placeholder="you@healnex.com"
               />
             </div>
-          )}
-          <div className="grid gap-2">
-            <label className="text-sm text-cyan-200">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={form.email}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="you@healnex.ai"
-            />
+            <div>
+              <label className="text-xs text-white/70">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="mt-1 w-full rounded-md bg-black/40 border border-white/10 p-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+                placeholder="••••••••"
+              />
+            </div>
           </div>
-          <div className="grid gap-2">
-            <label className="text-sm text-cyan-200">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              placeholder="••••••••"
-            />
+
+          <div>
+            <label className="text-xs text-white/70">Role</label>
+            <div className="mt-1 grid grid-cols-3 gap-2">
+              {['patient', 'doctor', 'admin'].map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRole(r)}
+                  className={`flex items-center justify-center gap-2 rounded-md border border-white/10 px-4 py-2 text-sm transition ${
+                    role === r ? 'bg-white/20 text-white' : 'bg-black/40 text-white/70 hover:text-white'
+                  }`}
+                >
+                  <User className="h-4 w-4" /> {r.charAt(0).toUpperCase() + r.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
-          {mode === 'register' && (
-            <div className="grid gap-2">
-              <label className="text-sm text-cyan-200">Role</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                className="w-full rounded-lg bg-black/40 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-400"
-              >
-                <option value="patient">Patient</option>
-                <option value="doctor">Doctor</option>
-              </select>
+
+          {error && (
+            <div className="text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-md p-3">
+              {error}
             </div>
           )}
+
           <button
             type="submit"
             disabled={loading}
-            className="mt-2 inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-2 font-medium text-white hover:opacity-90 disabled:opacity-50"
+            className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-r from-fuchsia-600 to-cyan-500 px-5 py-3 text-white font-medium shadow-[0_0_30px_-5px_rgba(34,211,238,0.5)] hover:opacity-90 disabled:opacity-60"
           >
-            {loading ? 'Please wait…' : mode === 'login' ? 'Log In' : 'Sign Up'}
+            <LogIn className="h-4 w-4" /> {loading ? 'Please wait...' : mode === 'login' ? 'Login' : 'Register'}
           </button>
-          {message && <p className="text-sm text-cyan-200/90">{message}</p>}
         </form>
       </div>
     </section>
   );
-}
+};
+
+export default AuthPortal;
