@@ -65,21 +65,32 @@ function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-6">
+          {section === 'auth' && (
+            <div className="grid grid-cols-1 gap-6">
               <AuthPortal baseUrl={baseUrl} onAuth={handleAuth} />
+            </div>
+          )}
+
+          {section === 'upload' && (
+            <div className="grid grid-cols-1 gap-6">
               <ReportUploader baseUrl={baseUrl} token={token} />
             </div>
-            <div className="space-y-6">
+          )}
+
+          {section === 'ai' && (
+            <div className="grid grid-cols-1 gap-6">
               <AIChat baseUrl={baseUrl} token={token} />
-              <section id="care" className="w-full">
-                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 md:p-8">
-                  <h3 className="text-white font-semibold mb-2">Care shortcuts</h3>
-                  <p className="text-white/70 text-sm">Role-based dashboards coming next: personalized views for patients and doctors with appointments, prescriptions, and tailored insights.</p>
-                </div>
-              </section>
             </div>
-          </div>
+          )}
+
+          {section === 'care' && (
+            <section id="care" className="w-full">
+              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-6 md:p-8">
+                <h3 className="text-white font-semibold mb-2">Care shortcuts</h3>
+                <p className="text-white/70 text-sm">Role-based dashboards coming next: personalized views for patients and doctors with appointments, prescriptions, and tailored insights.</p>
+              </div>
+            </section>
+          )}
         </main>
       </div>
     </div>
